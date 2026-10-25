@@ -1,0 +1,21 @@
+{
+  "name": "VisaHoBe",
+  "short_name": "VisaHoBe",
+  "description": "Your Dream Abroad Starts Here - Visa Agency OS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfcf9",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

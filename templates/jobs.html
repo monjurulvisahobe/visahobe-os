@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VisaHoBe Jobs - Work Abroad Opportunities</title>
+<meta name="description" content="VisaHoBe job portal - verified work permit jobs for Canada, Romania, Poland. Your Dream Abroad Starts Here.">
+<link rel="manifest" href="/static/manifest.json">
+<style>
+  :root { --bg:#fcfcf9; --ink:#111827; --line:#e5e7eb; --mut:#6b7280; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif; }
+  body { background:var(--bg); color:var(--ink); }
+  header { background:#fff; border-bottom:1px solid var(--line); padding:16px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font-weight:700; font-size:18px; }
+  .logo span { color:#0ea5e9; }
+  .container { max-width:960px; margin:0 auto; padding:24px 20px; }
+  h1 { font-size:24px; letter-spacing:-0.5px; }
+  .sub { color:var(--mut); font-size:14px; margin:6px 0 20px; }
+  .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  input, select { border:1px solid var(--line); background:#fff; border-radius:10px; padding:10px 12px; font-size:14px; outline:none; }
+  input:focus, select:focus { border-color:var(--ink); }
+  #search { flex:1; min-width:200px; }
+  .jobs { display:grid; gap:12px; }
+  .job-card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 18px; transition:box-shadow .15s; }
+  .job-card:hover { box-shadow:0 4px 12px rgba(0,0,0,.06); }
+  .jc-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .jc-top b { font-size:16px; }
+  .meta { font-size:13px; color:var(--mut); margin:6px 0; line-height:1.6; }
+  .badge { font-size:11px; padding:3px 10px; border-radius:999px; background:#f3f4f6; white-space:nowrap; }
+  .badge.green { background:#dcfce7; color:#16a34a; }
+  .btn { background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:10px; font-size:13px; cursor:pointer; font-weight:500; }
+  .empty { text-align:center; color:var(--mut); padding:48px 0; }
+  .modal-ov { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
+  .modal { background:#fff; border-radius:16px; max-width:420px; width:100%; padding:22px; }
+  .modal h2 { font-size:16px; margin-bottom:12px; }
+  .modal input { width:100%; margin-bottom:10px; }
+  .mrow { display:flex; gap:8px; justify-content:flex-end; }
+  footer { text-align:center; color:var(--mut); font-size:12px; padding:28px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">VisaHoBe<span>.</span> Jobs</div>
+  <a href="/"><button style="background:none;border:none;color:#111827;font-size:13px;cursor:pointer">Dashboard →</button></a>
+</header>
+<div class="container">
+  <h1>Work Abroad Jobs</h1>
+  <div class="sub">Verified work permit jobs — Canada, Romania, Poland. Your Dream Abroad Starts Here.</div>
+  <div class="toolbar">
+    <input id="search" placeholder="Search jobs..." oninput="render()">
+    <select id="country" onchange="render()"><option value="">All Countries</option><option>Canada</option><option>Romania</option><option>Poland</option></select>
+  </div>
+  <div class="jobs" id="jobs"><div class="empty">Loading jobs...</div></div>
+</div>
+<div class="modal-ov" id="ov" onclick="if(event.target===this)close()">
+  <div class="modal">
+    <h2 id="m-title">Apply</h2>
+    <input id="f-name" placeholder="Full Name">
+    <input id="f-phone" placeholder="Phone Number">
+    <input id="f-passport" placeholder="Passport Number">
+    <div class="mrow"><button style="background:none;border:none;color:#6b7280;cursor:pointer" onclick="close()">Cancel</button><button class="btn" onclick="submitApply()">Submit Application</button></div>
+  </div>
+</div>
+<footer>© VisaHoBe — Your Dream Abroad Starts Here</footer>
+<script>
+let jobs = [], applyId = null;
+const $ = id => document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function load(){ jobs = await (await fetch('/api/jobs/public')).json(); render(); }
+function render(){
+  const q = $('search').value.toLowerCase(), c = $('country').value;
+  const f = jobs.filter(j => (!c || j.country===c) && (!q || (j.title+' '+j.description).toLowerCase().includes(q)));
+  $('jobs').innerHTML = f.length ? f.map(j=>`
+    <div class="job-card">
+      <div class="jc-top"><b>${esc(j.title)}</b><span class="badge green">${esc(j.country||'')}</span></div>
+      <div class="meta">Salary: ${esc(j.salary||'Negotiable')} · Vacancy: ${esc(j.vacancy||'-')} · Type: ${esc(j.type||'Full Time')}${j.deadline?' · Deadline: '+esc(j.deadline):''}<br>${esc((j.description||'').slice(0,160))}</div>
+      <button class="btn" onclick="openApply('${j.id}','${esc(j.title)}')">Apply</button>
+    </div>`).join('') : '<div class="empty">No jobs found. Check back soon!</div>';
+}
+function openApply(id, title){ applyId=id; $('m-title').textContent='Apply: '+title; $('ov').style.display='flex'; }
+function close(){ $('ov').style.display='none'; }
+async function submitApply(){
+  await fetch('/api/apply',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({job_id:applyId,name:$('f-name').value,phone:$('f-phone').value,passport:$('f-passport').value})});
+  close(); $('f-name').value=$('f-phone').value=$('f-passport').value='';
+  alert('Application submitted! VisaHoBe will contact you soon.');
+}
+load(); setInterval(load, 10000);
+</script>
+</body>
+</html>
